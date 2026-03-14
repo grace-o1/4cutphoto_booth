@@ -1,0 +1,102 @@
+body {
+    font-family: sans-serif; 
+    display: flex; 
+    justify-content: center;
+    background-color: papayawhip;
+}
+
+.container {
+    text-align: center;
+    border: 1px solid #000;
+}
+
+.camera-view {
+    border-right: 1px solid #000; 
+    margin-bottom: 10px;
+}
+
+#video {
+    background: #000;
+}
+
+#capture-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-style: italic;
+    background: #ffc0c0;
+
+}
+
+/* 최종 사진 레이아웃 스타일 example */
+
+.photo-strip {
+    display: flex;
+    flex-direction: column;
+    width: 150px;
+    border: 2px solid #000;
+    padding: 5px;
+    margin-top: 20px;
+}
+
+.photo-strip img {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.sticker-palette {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.sticker-item {
+    width: 50px;
+    height: 50px;
+    cursor: grab;
+}
+
+.sticker {
+    width: 50px;
+    height: 50px;
+    cursor: grab;
+}
+
+#sticker-workspace {
+    position: relative; /*스티커 배치를 위한 기준점*/
+    border: 2px dashed #aaa;
+    width: 400px;
+    height: 700px; /*최종 사진 높이와 동일하게 설정*/
+    /* 캔버스 자체는 JS로 로드되므로 여기서는 컨테이너만 설정 */    
+}
+
+/* 작업 영역에 드롭된 스티커 스타일 */
+.dropped-sticker {
+    position: absolute;
+    cursor: move;
+}
+
+#save-final-image-btn {
+    width: 300px;
+    height: 50px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.5rem;
+    border-radius: 20px;
+    border: none;
+    font-weight: bold;
+    color: white;
+    background: brown;
+    cursor: pointer;
+}
+
+.bi {
+    width: 50px;
+    height: 50px;
+    color: brown;
+    margin-right: -170px;
+}
