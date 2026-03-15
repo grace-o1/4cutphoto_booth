@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //캔버스 크기 고정
     const CANVAS_W = 400;
-    const CANVAS_H = 700;
+    const CANVAS_H = 400;
 
     const stickerSize = 50;
 
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // width: 280,
                     // height: 680,
                     facingMode: 'user',
-                    aspectRatio: 9/16
+                    aspectRatio: 4/4
                 }
             });
             video.srcObject = stream;
