@@ -102,7 +102,7 @@ body > #capture-btn {
     max-width: 400px; /*pc 400*/
     aspect-ratio: 4 / 7;
     margin: auto;
-    /* height: 700px; */
+    height: 400px;
     /* 캔버스 자체는 JS로 로드되므로 여기서는 컨테이너만 설정 */    
 }
 
