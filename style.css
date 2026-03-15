@@ -21,7 +21,7 @@ body {
 #video {
     background: #000;
     width: 100%;
-    aspect-ratio: 9 / 16; /*모든 모바일에서 같은 세로비율*/
+    aspect-ratio: 4 / 4; /*모든 모바일에서 같은 세로비율*/
     object-fit: cover;
 }
 
