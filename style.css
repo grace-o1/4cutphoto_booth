@@ -13,6 +13,12 @@ body {
     
 }
 
+.container > h1 {
+    display: flex;
+    align-items: center;
+    justify-content: cebterl
+}
+
 .camera-view {
     border-right: 1px solid #000; 
     margin-bottom: 10px;
