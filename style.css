@@ -10,10 +10,12 @@ body {
 .container {
     text-align: center;
     border: 1px solid #000;
-    
+    position: relative;
 }
 
 .container > h1 {
+    position: absolute;
+    margin: top;
     display: flex;
     align-items: center;
     justify-content: cebterl
