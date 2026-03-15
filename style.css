@@ -13,11 +13,8 @@ body {
 }
 
 .container > h1 {
-    margin: top;
     display: flex;
-    align-items: top;
     text-align: top;
-    justify-content: top;
 }
 
 .camera-view {
