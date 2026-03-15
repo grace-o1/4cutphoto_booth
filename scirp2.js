@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //캔버스 크기 고정
     const CANVAS_W = 400;
-    const CANVAS_H = 400;
+    const CANVAS_H = 700;
 
     const stickerSize = 50;
 
