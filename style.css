@@ -17,9 +17,9 @@ body {
     position: absolute;
     margin: top;
     display: flex;
-    align-items: center;
+    align-items: top;
     text-align: top;
-    justify-content: cebterl
+    justify-content: top;
 }
 
 .camera-view {
