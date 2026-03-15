@@ -4,13 +4,13 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     /* margin: 100px 0 0 150px; */
 }
 
 .container {
     text-align: center;
     border: 1px solid #000;
-    position: relative;
 }
 
 .container > h1 {
