@@ -13,9 +13,12 @@ body {
 }
 
 h1 {
-    top: 0;
-    width: 100%;
     position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
 }
 
 .camera-view {
