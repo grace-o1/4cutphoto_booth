@@ -95,7 +95,21 @@ body {
     /* 캔버스 자체는 JS로 로드되므로 여기서는 컨테이너만 설정 */    
 }
 
+@media screen and (min-width: 480px) {
+    .container{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
 
+@media screen and (min-width: 1024px) {
+    .container{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
 
 /* 작업 영역에 드롭된 스티커 스타일 */
 .dropped-sticker {
