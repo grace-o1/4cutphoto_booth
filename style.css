@@ -1,9 +1,6 @@
 body {
     font-family: sans-serif; 
     background-color: papayawhip;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     /* margin: 100px 0 0 150px; */
 }
 
@@ -24,6 +21,9 @@ body > h1 {
 .camera-view {
     border-right: 1px solid #000; 
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #video {
@@ -42,6 +42,9 @@ body > h1 {
     font-weight: bold;
     font-style: italic;
     background: #ffc0c0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
 }
 
