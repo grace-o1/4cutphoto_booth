@@ -1,13 +1,18 @@
 body {
     font-family: sans-serif; 
-    display: flex; 
-    justify-content: center;
+    /* display: flex;  */
+    /* justify-content: center; */
     background-color: papayawhip;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 100px 0 0 150px;
 }
 
 .container {
     text-align: center;
     border: 1px solid #000;
+    
 }
 
 .camera-view {
@@ -17,6 +22,9 @@ body {
 
 #video {
     background: #000;
+    width: 100%;
+    aspect-ratio: 9 / 16; /*모든 모바일에서 같은 세로비율*/
+    object-fit: cover;
 }
 
 #capture-btn {
@@ -35,11 +43,12 @@ body {
 
 .photo-strip {
     display: flex;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
     width: 150px;
     border: 2px solid #000;
     padding: 5px;
-    margin-top: 20px;
 }
 
 .photo-strip img {
@@ -53,12 +62,22 @@ body {
     margin-bottom: 10px;
     display: flex;
     gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sticker-palette::-webkit-scrollbar{
+    display: none;
 }
 
 .sticker-item {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     cursor: grab;
+    touch-action: auto;
+    flex: 0 0 auto; /*스티커 크키 일정으로 가로배치*/
 }
 
 .sticker {
@@ -70,10 +89,15 @@ body {
 #sticker-workspace {
     position: relative; /*스티커 배치를 위한 기준점*/
     border: 2px dashed #aaa;
-    width: 400px;
-    height: 700px; /*최종 사진 높이와 동일하게 설정*/
+    width: 100%; /*mobile cover fit*/
+    max-width: 400px; /*pc 400*/
+    aspect-ratio: 4 / 7;
+    margin: auto;
+    /* height: 700px; */
     /* 캔버스 자체는 JS로 로드되므로 여기서는 컨테이너만 설정 */    
 }
+
+
 
 /* 작업 영역에 드롭된 스티커 스타일 */
 .dropped-sticker {
