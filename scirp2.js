@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setupStickerDragDrop();
         setupMobileStickerDrag();
+        MobileStickerMove();
     };
 
     // ─────────────────────────────────────────
@@ -150,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const y = e.clientY - rect.top;
 
             addStickerToCanvas(imgSrc, x, y);
-            MobileStickerMove();
+
         });
     }
 
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
-    stickers.addEventListener("touchmove", (e) => {
+    stickerWorkspace.addEventListener("touchmove", (e) => {
         if(!activeSticker) return;
         e.preventDefault();
 
@@ -241,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         redrawFinalCanvas();
     });
 
-    stickers.addEventListener("touchend", () => {
+    stickerWorkspace.addEventListener("touchend", () => {
         activeSticker = null;
     });
 
