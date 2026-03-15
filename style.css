@@ -42,10 +42,6 @@ h1 {
     font-weight: bold;
     font-style: italic;
     background: #ffc0c0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
 }
 
 /* 최종 사진 레이아웃 스타일 example */
@@ -60,7 +56,7 @@ h1 {
     padding: 5px;
 }
 
-.photo-strip img {
+.container > .photo-strip img {
     width: 100%;
     margin-bottom: 5px;
 }
