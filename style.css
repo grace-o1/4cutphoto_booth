@@ -13,7 +13,8 @@ body {
 }
 
 h1 {
-    display: flex;
+    top: 0;
+    width: 100%;
     position: fixed;
 }
 
