@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalPhotoCanvas = document.getElementById('final-photo-canvas');
     const saveBtn = document.getElementById('save-final-image-btn');
     const stickerWorkspace = document.getElementById('sticker-workspace');
-
+    
     let capturedPhotos = [];
     const MAX_PHOTOS = 4;
     let finalCtx = finalPhotoCanvas.getContext('2d');
@@ -25,9 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: 200,
-                    height: 350,
-                    facingMode: 'user'
+                    // width: 280,
+                    // height: 680,
+                    facingMode: 'user',
+                    aspectRatio: 9/16
                 }
             });
             video.srcObject = stream;
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 captureBtn.disabled = false;
             };
         } catch (err) {
-            console.error("카메라 접근 오류: - scirp2.js:43", err);
+            console.error("카메라 접근 오류: - scirp2.js:37", err);
             alert("카메라에 접근할 수 없습니다. 권한을 확인해주세요.");
         }
     }
@@ -64,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const photoDataUrl = canvas.toDataURL('image/png');
         capturedPhotos.push(photoDataUrl);
 
-        console.log(`사진 촬영 완료: ${capturedPhotos.length}/${MAX_PHOTOS} - scirp2.js:67`);
+        console.log(`사진 촬영 완료: ${capturedPhotos.length}/${MAX_PHOTOS} - scirp2.js:61`);
 
         if (capturedPhotos.length < MAX_PHOTOS) {
             captureBtn.textContent = `사진찍기 ${capturedPhotos.length + 1}/${MAX_PHOTOS}`;
@@ -72,8 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             captureBtn.textContent = '촬영 완료! 편집 시작';
             captureBtn.disabled = true;
             switchToEditMode();
-            setupStickerDragDrop();
-        }
+        };
     });
 
     // ─────────────────────────────────────────
@@ -90,7 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // [FIX] 비동기 사진 로드 완료 후 스티커 드래그 설정
         drawPhotosOnCanvas().then(() => {
         });
-    }
+
+        setupStickerDragDrop();
+        setupMobileStickerDrag();
+    };
 
     // ─────────────────────────────────────────
     // 4. 4컷 사진 캔버스에 그리기 (Promise 반환)
@@ -146,6 +149,50 @@ document.addEventListener('DOMContentLoaded', () => {
             addStickerToCanvas(imgSrc, x, y);
         });
     }
+
+    function setupMobileStickerDrag() {
+
+    const stickerItems = document.querySelectorAll('.sticker-item');
+
+    stickerItems.forEach(item => {
+
+        item.addEventListener("touchstart", (e) => {
+            touchDraggingSticker = item.src;
+            e.isTrusted();
+        });
+
+        item.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+        });
+
+        item.addEventListener("touchend", (e) => {
+
+            if (!touchDraggingSticker) return;
+
+            const touch = e.changedTouches[0];
+            const rect = finalPhotoCanvas.getBoundingClientRect();
+
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            // 캔버스 영역 안에 드롭했을 때만
+            if (
+                x >= 0 &&
+                x <= rect.width &&
+                y >= 0 &&
+                y <= rect.height
+            ) {
+                addStickerToCanvas(touchDraggingSticker, x, y);
+            }
+
+            // touchDraggingSticker = null;
+            touchDraggingSticker = addStickerToCanvas();
+
+        });
+
+    });
+
+}
 
     function addStickerToCanvas(src, x, y) {
         const img = new Image();
