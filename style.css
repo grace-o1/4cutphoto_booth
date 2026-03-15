@@ -14,7 +14,7 @@ body {
 
 .container > h1 {
     display: flex;
-    text-align: top;
+    position: fixed;
 }
 
 .camera-view {
