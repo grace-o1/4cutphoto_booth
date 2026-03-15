@@ -9,14 +9,14 @@ body {
     border: 1px solid #000;
 }
 
-h1 {
+/* h1 {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     text-align: center;
     padding: 10px 0;
-}
+} */
 
 .camera-view {
     border-right: 1px solid #000; 
