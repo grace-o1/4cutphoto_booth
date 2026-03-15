@@ -12,7 +12,7 @@ body {
     border: 1px solid #000;
 }
 
-.container > h1 {
+h1 {
     display: flex;
     position: fixed;
 }
