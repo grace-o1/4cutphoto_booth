@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_PHOTOS = 4;
     let finalCtx = finalPhotoCanvas.getContext('2d');
     let stickers = [];
+    let activeSticker = null; //현재 잡고 있는스티커
+    let offsetX = 0; //내부 잡은 위치 보정xy
+    let offsetY = 0;
 
     //캔버스 크기 고정
     const CANVAS_W = 400;
@@ -93,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setupStickerDragDrop();
         setupMobileStickerDrag();
+        MobileStickerMove();
     };
 
     // ─────────────────────────────────────────
@@ -208,6 +212,38 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         img.src = src;
     }
+
+    //  ─────────────────────────────────────────
+    // 5-1. 모바일 스티커 이동 함수 추가
+    function MobileStickerMove(){
+        stickerWorkspace.addEventListener("touchstart", (e) => {
+            const rect = finalPhotoCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+        })
+    }
+
+    stickerWorkspace.addEventListener("touchmove", (e) => {
+        if(!activeSticker) return;
+        e.preventDefault();
+
+        const rect = finalPhotoCanvas.getBoundingClientRect();
+        const touch = e.touches[0];
+
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        activeSticker.x = x - offsetX;
+        activeSticker.y = y - offsetY;
+
+        redrawFinalCanvas();
+    });
+
+    stickerWorkspace.addEventListener("touchend", () => {
+        activeSticker = null;
+    });
 
     // [FIX] 배경 사진 로드 완료 후 스티커 그리기
     function redrawFinalCanvas() {
