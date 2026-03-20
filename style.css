@@ -1,29 +1,26 @@
 * {
-    touch-action: manipulation;
-}
-
-#sticker-workspace {
-    touch-action: none; /* 스티커 영역만 터치 드래그 허용 */
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
     font-family: sans-serif;
     background-color: papayawhip;
+    padding: 16px;
 }
 
 .container {
-    text-align: center;
-    display: flex;           /* [FIX] 미디어쿼리 중복 제거 → 여기서 한 번만 */
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    flex-direction: column;  /* 세로 정렬 */
+    text-align: center;
 }
 
 .camera-view {
+    width: 100%;
+    max-width: 400px;
     margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 #video {
@@ -31,6 +28,7 @@ body {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
+    display: block;
 }
 
 #capture-btn {
@@ -43,34 +41,23 @@ body {
     font-style: italic;
     background: #ffc0c0;
     cursor: pointer;
-}
-
-.photo-strip {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 150px;
-    padding: 5px;
-}
-
-.container > .photo-strip img {
-    width: 100%;
-    margin-bottom: 5px;
+    touch-action: manipulation;
 }
 
 .sticker-palette {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
     display: flex;
     gap: 10px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
     width: 100%;
     max-width: 400px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* ✅ 팔레트 자체 가로 스크롤은 허용, 세로 스크롤은 막음 */
+    touch-action: pan-x;
+    scrollbar-width: none;
 }
 
 .sticker-palette::-webkit-scrollbar {
@@ -80,17 +67,22 @@ body {
 .sticker-item {
     width: 60px;
     height: 60px;
-    cursor: grab;
     flex: 0 0 auto;
-    touch-action: none; /* [FIX] auto → none: 스티커 터치 드래그가 스크롤에 안 막힘 */
+    cursor: grab;
     user-select: none;
     -webkit-user-select: none;
+    /* ✅ Pointer Events 방식에서는 touch-action: none 필수
+       브라우저가 터치를 스크롤로 처리하기 전에 JS가 먼저 받음 */
+    touch-action: none;
+    -webkit-user-drag: none;
+    border-radius: 8px;
 }
 
-.sticker {
-    width: 50px;
-    height: 50px;
-    cursor: grab;
+.result-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
 
 #sticker-workspace {
@@ -98,23 +90,17 @@ body {
     border: 2px dashed #aaa;
     width: 100%;
     max-width: 400px;
-    aspect-ratio: 1 / 1; /* [FIX] height: 400px 제거 → aspect-ratio 단독 사용 */
+    aspect-ratio: 1 / 1;  /* ✅ height 제거, aspect-ratio만 사용 */
     margin: auto;
     overflow: hidden;
+    /* ✅ 캔버스 영역도 touch-action: none 으로 브라우저 스크롤 차단 */
+    touch-action: none;
 }
 
-/* [FIX] 미디어쿼리 중복 제거 (200px짜리는 의미 없음, 위 .container에 통합) */
-@media screen and (min-width: 1024px) {
-    .container {
-        flex-direction: row;      /* PC에서는 가로 배치로 변경 가능 */
-        align-items: flex-start;
-        gap: 24px;
-    }
-}
-
-.dropped-sticker {
-    position: absolute;
-    cursor: grab;
+#final-photo-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 #save-final-image-btn {
@@ -129,13 +115,13 @@ body {
     background: brown;
     cursor: pointer;
     margin-top: 12px;
+    touch-action: manipulation;
 }
 
-body > .bi {
-    width: 50px;
-    height: 50px;
-    color: brown;
-    position: fixed;
-    top: 0;
-    left: 0;
+@media screen and (min-width: 1024px) {
+    .container {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 32px;
+    }
 }
