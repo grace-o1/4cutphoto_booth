@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ─────────────────────────────────────────
-    // 요소 선택
-    // ─────────────────────────────────────────
     const video            = document.getElementById('video');
     const captureBtn       = document.getElementById('capture-btn');
     const cameraView       = document.querySelector('.camera-view');
@@ -11,32 +8,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn          = document.getElementById('save-final-image-btn');
     const stickerWorkspace = document.getElementById('sticker-workspace');
 
-    // ─────────────────────────────────────────
-    // 상태 변수
-    // ─────────────────────────────────────────
     let capturedPhotos = [];
     const MAX_PHOTOS   = 4;
     const finalCtx     = finalPhotoCanvas.getContext('2d');
-    let stickers       = [];         // 캔버스에 올라간 스티커 목록
-    let activeSticker  = null;       // 터치로 이동 중인 스티커
-    let offsetX = 0, offsetY = 0;   // 터치 잡은 위치 보정
+    let stickers       = [];
+    let activeSticker  = null;  // 캔버스 위 기존 스티커 이동용
+    let offsetX = 0, offsetY = 0;
 
     const CANVAS_W     = 400;
     const CANVAS_H     = 400;
-    const STICKER_SIZE = 60;  // 스티커 크기(px) — 이 숫자만 바꾸면 됩니다
+    const STICKER_SIZE = 60;
 
     // ─────────────────────────────────────────
-    // 유틸: 캔버스 픽셀 좌표 변환
-    //  → CSS 표시 크기와 실제 픽셀 크기가 다를 때 보정
+    // 유틸: 화면 좌표 → 캔버스 픽셀 좌표 변환
     // ─────────────────────────────────────────
     function toCanvasCoords(clientX, clientY) {
-        const rect   = finalPhotoCanvas.getBoundingClientRect();
-        const scaleX = CANVAS_W / rect.width;
-        const scaleY = CANVAS_H / rect.height;
+        const rect = finalPhotoCanvas.getBoundingClientRect();
         return {
-            x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top)  * scaleY
+            x: (clientX - rect.left) * (CANVAS_W / rect.width),
+            y: (clientY - rect.top)  * (CANVAS_H / rect.height)
         };
+    }
+
+    // ─────────────────────────────────────────
+    // 유틸: 해당 좌표가 캔버스 위인지 확인
+    // ─────────────────────────────────────────
+    function isOverCanvas(clientX, clientY) {
+        const rect = finalPhotoCanvas.getBoundingClientRect();
+        return (
+            clientX >= rect.left && clientX <= rect.right &&
+            clientY >= rect.top  && clientY <= rect.bottom
+        );
     }
 
     // ─────────────────────────────────────────
@@ -48,14 +50,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 video: { facingMode: 'user', aspectRatio: 1 }
             });
             video.srcObject = stream;
-            video.style.transform = 'scaleX(-1)'; // 미러 반전
+            video.style.transform = 'scaleX(-1)';
             video.onloadedmetadata = () => {
                 video.play();
                 captureBtn.disabled = false;
             };
         } catch (err) {
             console.error('카메라 오류:', err);
-            alert('카메라에 접근할 수 없습니다. 권한을 확인해주세요.');
+            alert('카메라에 접근할 수 없습니다.');
         }
     }
 
@@ -69,13 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx  = snap.getContext('2d');
         snap.width  = video.videoWidth;
         snap.height = video.videoHeight;
-
         ctx.translate(snap.width, 0);
         ctx.scale(-1, 1);
         ctx.drawImage(video, 0, 0);
 
         capturedPhotos.push(snap.toDataURL('image/png'));
-        console.log(`촬영 ${capturedPhotos.length}/${MAX_PHOTOS}`);
 
         if (capturedPhotos.length < MAX_PHOTOS) {
             captureBtn.textContent = `사진찍기 ${capturedPhotos.length + 1}/${MAX_PHOTOS}`;
@@ -90,52 +90,46 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. 편집 모드 전환
     // ─────────────────────────────────────────
     function switchToEditMode() {
-        cameraView.style.display  = 'none';
-        captureBtn.style.display  = 'none';
-        resultArea.style.display  = 'block';
+        cameraView.style.display = 'none';
+        captureBtn.style.display = 'none';
+        resultArea.style.display = 'block';
 
         finalPhotoCanvas.width  = CANVAS_W;
         finalPhotoCanvas.height = CANVAS_H;
 
-        // 사진 다 그린 뒤 스티커 이벤트 등록
         drawPhotosOnCanvas().then(() => {
-            setupMouseDrag();   // PC 마우스
-            setupTouchDrag();   // 모바일 터치
+            setupMouseDrag();  // PC
+            setupTouchDrag();  // 모바일
         });
     }
 
     // ─────────────────────────────────────────
-    // 4. 4컷 사진 캔버스에 그리기
+    // 4. 4컷 사진 그리기
     // ─────────────────────────────────────────
     function drawPhotosOnCanvas() {
         finalCtx.clearRect(0, 0, CANVAS_W, CANVAS_H);
         const cellW = CANVAS_W / 2;
         const cellH = CANVAS_H / 2;
 
-        const promises = capturedPhotos.map((src, i) =>
-            new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    finalCtx.drawImage(
-                        img,
-                        (i % 2) * cellW,
-                        Math.floor(i / 2) * cellH,
-                        cellW, cellH
-                    );
-                    resolve();
-                };
-                img.onerror = () => resolve();
-                img.src = src;
-            })
+        return Promise.all(
+            capturedPhotos.map((src, i) =>
+                new Promise(resolve => {
+                    const img = new Image();
+                    img.onload = () => {
+                        finalCtx.drawImage(img, (i%2)*cellW, Math.floor(i/2)*cellH, cellW, cellH);
+                        resolve();
+                    };
+                    img.onerror = () => resolve();
+                    img.src = src;
+                })
+            )
         );
-        return Promise.all(promises);
     }
 
     // ─────────────────────────────────────────
-    // 5. 스티커를 캔버스에 추가
+    // 5. 스티커 추가 & 다시 그리기
     // ─────────────────────────────────────────
     function addStickerToCanvas(src, cx, cy) {
-        // cx, cy = 캔버스 픽셀 좌표 (이미 변환된 값)
         const img = new Image();
         img.onload = () => {
             stickers.push({
@@ -150,9 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = src;
     }
 
-    // ─────────────────────────────────────────
-    // 6. 캔버스 전체 다시 그리기 (배경 → 스티커)
-    // ─────────────────────────────────────────
     function redrawFinalCanvas() {
         drawPhotosOnCanvas().then(() => {
             stickers.forEach(({ img, x, y, width, height }) => {
@@ -162,43 +153,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─────────────────────────────────────────
-    // 7-A. PC 마우스 드래그
-    //   팔레트 스티커를 마우스로 캔버스에 드래그&드롭
+    // 6-A. PC 마우스 드래그
     // ─────────────────────────────────────────
     function setupMouseDrag() {
         let draggingSrc = null;
 
-        // ① 팔레트 스티커 — 마우스 누를 때 src 저장
-        // [FIX] "movedown" → "mousedown"
         document.querySelectorAll('.sticker-item').forEach(item => {
+            // 마우스 드래그 방식
             item.addEventListener('mousedown', () => {
                 draggingSrc = item.src;
             });
-
-            // HTML drag & drop API 병행 지원
-            item.addEventListener('dragstart', (e) => {
+            // HTML drag & drop API 방식
+            item.setAttribute('draggable', true);
+            item.addEventListener('dragstart', e => {
                 draggingSrc = item.src;
                 e.dataTransfer.setData('text/plain', item.src);
                 e.dataTransfer.effectAllowed = 'copy';
             });
         });
 
-        // ② 캔버스 위에서 마우스 떼면 → 스티커 추가
-        // [FIX] "moveup" → "mouseup"
-        stickerWorkspace.addEventListener('mouseup', (e) => {
+        stickerWorkspace.addEventListener('mouseup', e => {
             if (!draggingSrc) return;
             const { x, y } = toCanvasCoords(e.clientX, e.clientY);
             addStickerToCanvas(draggingSrc, x, y);
             draggingSrc = null;
         });
 
-        // ③ HTML drag & drop API drop 이벤트
-        stickerWorkspace.addEventListener('dragover', (e) => {
+        stickerWorkspace.addEventListener('dragover', e => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
         });
 
-        stickerWorkspace.addEventListener('drop', (e) => {
+        stickerWorkspace.addEventListener('drop', e => {
             e.preventDefault();
             const src = e.dataTransfer.getData('text/plain') || draggingSrc;
             if (!src) return;
@@ -207,56 +193,105 @@ document.addEventListener('DOMContentLoaded', () => {
             draggingSrc = null;
         });
 
-        // ④ 캔버스 밖에서 마우스 떼도 초기화
         document.addEventListener('mouseup', () => { draggingSrc = null; });
     }
 
     // ─────────────────────────────────────────
-    // 7-B. 모바일 터치
-    //   팔레트 스티커 터치 → 캔버스 드롭 / 캔버스 위 스티커 이동
+    // 6-B. 모바일 터치 드래그
+    //
+    // 핵심 원리:
+    //   터치 이벤트는 시작한 요소에 고정되기 때문에
+    //   팔레트에서 시작한 터치는 캔버스에 도달하지 않음.
+    //   → touchmove / touchend 에서 e.touches[0] 좌표를 직접 읽어
+    //     document.elementFromPoint()로 어느 요소 위인지 판별.
+    //     캔버스 위에서 손가락을 떼면 → 그 위치에 스티커 추가.
     // ─────────────────────────────────────────
     function setupTouchDrag() {
 
-        let touchSrc = null; // 팔레트에서 선택한 스티커 src
+        let touchSrc      = null;  // 드래그 중인 스티커 src
+        let ghostEl       = null;  // 화면에 따라다니는 미리보기 이미지
 
-        // ── 팔레트 스티커 터치 ──
+        // ── 팔레트 스티커 터치 시작 ──
         document.querySelectorAll('.sticker-item').forEach(item => {
-            item.addEventListener('touchstart', (e) => {
-                e.preventDefault(); // 팔레트 스크롤 방지
+            item.addEventListener('touchstart', e => {
+                e.preventDefault();
                 touchSrc = item.src;
-            }, { passive: false });
 
-            item.addEventListener('touchend', (e) => {
-                if (!touchSrc) return;
-                const touch = e.changedTouches[0];
-                // 손가락 뗀 위치가 캔버스 위인지 확인
-                const rect = finalPhotoCanvas.getBoundingClientRect();
-                if (
-                    touch.clientX >= rect.left && touch.clientX <= rect.right &&
-                    touch.clientY >= rect.top  && touch.clientY <= rect.bottom
-                ) {
-                    const { x, y } = toCanvasCoords(touch.clientX, touch.clientY);
-                    addStickerToCanvas(touchSrc, x, y);
-                }
-                touchSrc = null;
+                // 손가락 따라다니는 고스트 이미지 생성
+                ghostEl = document.createElement('img');
+                ghostEl.src = item.src;
+                ghostEl.style.cssText = `
+                    position: fixed;
+                    width: ${STICKER_SIZE}px;
+                    height: ${STICKER_SIZE}px;
+                    pointer-events: none;   /* 터치 이벤트 통과 */
+                    opacity: 0.75;
+                    z-index: 9999;
+                    transform: translate(-50%, -50%);
+                `;
+                document.body.appendChild(ghostEl);
+
+                // 초기 위치
+                const t = e.touches[0];
+                ghostEl.style.left = t.clientX + 'px';
+                ghostEl.style.top  = t.clientY + 'px';
+
             }, { passive: false });
         });
 
-        // ── 캔버스 위 기존 스티커 이동 ──
+        // ── 손가락 이동: 고스트 따라오게 + 캔버스 강조 ──
+        document.addEventListener('touchmove', e => {
+            if (!touchSrc) return;
+            e.preventDefault();  // 스크롤 방지
 
-        // [FIX] passive: false 여야 e.preventDefault() 가 동작
-        document.addEventListener('touchmove', (e) => {
-            if (e.target.closest('#sticker-workspace')) {
-                e.preventDefault(); // 카카오톡 스크롤 방지
+            const t = e.touches[0];
+
+            // 고스트 위치 업데이트
+            if (ghostEl) {
+                ghostEl.style.left = t.clientX + 'px';
+                ghostEl.style.top  = t.clientY + 'px';
             }
+
+            // 캔버스 위에 있으면 테두리 강조 (시각 피드백)
+            if (isOverCanvas(t.clientX, t.clientY)) {
+                stickerWorkspace.style.outline = '3px solid #f472b6';
+            } else {
+                stickerWorkspace.style.outline = '';
+            }
+
         }, { passive: false });
 
-        stickerWorkspace.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            const { x, y } = toCanvasCoords(touch.clientX, touch.clientY);
+        // ── 손가락 떼기: 캔버스 위면 스티커 추가 ──
+        document.addEventListener('touchend', e => {
+            if (!touchSrc) return;
+
+            const t = e.changedTouches[0];
+
+            // 고스트 제거
+            if (ghostEl) {
+                ghostEl.remove();
+                ghostEl = null;
+            }
+            stickerWorkspace.style.outline = '';
+
+            // 손가락 뗀 위치가 캔버스 위인지 확인
+            if (isOverCanvas(t.clientX, t.clientY)) {
+                const { x, y } = toCanvasCoords(t.clientX, t.clientY);
+                addStickerToCanvas(touchSrc, x, y);
+            }
+
+            touchSrc = null;
+        });
+
+        // ── 캔버스 위 기존 스티커 이동 ──
+        stickerWorkspace.addEventListener('touchstart', e => {
+            // 팔레트 드래그 중이면 이동 모드 무시
+            if (touchSrc) return;
+
+            const t = e.touches[0];
+            const { x, y } = toCanvasCoords(t.clientX, t.clientY);
 
             activeSticker = null;
-            // 위에 있는 스티커(마지막 추가된 것)부터 검사
             for (let i = stickers.length - 1; i >= 0; i--) {
                 const s = stickers[i];
                 if (x >= s.x && x <= s.x + s.width &&
@@ -269,13 +304,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, { passive: true });
 
-        // [FIX] touchmove를 touchstart 안이 아니라 밖에 등록
-        //        → 안에 등록하면 touchstart 때마다 이벤트가 중복 누적됨!
-        stickerWorkspace.addEventListener('touchmove', (e) => {
+        stickerWorkspace.addEventListener('touchmove', e => {
             if (!activeSticker) return;
             e.preventDefault();
-            const touch = e.touches[0];
-            const { x, y } = toCanvasCoords(touch.clientX, touch.clientY);
+            const t = e.touches[0];
+            const { x, y } = toCanvasCoords(t.clientX, t.clientY);
             activeSticker.x = x - offsetX;
             activeSticker.y = y - offsetY;
             redrawFinalCanvas();
@@ -287,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ─────────────────────────────────────────
-    // 8. 저장 (카카오톡 / iOS 대응)
+    // 7. 저장 (카카오톡 / iOS 대응)
     // ─────────────────────────────────────────
     saveBtn.addEventListener('click', async () => {
         await drawPhotosOnCanvas();
@@ -296,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const imageData = finalPhotoCanvas.toDataURL('image/png');
-        const newTab    = window.open();
+        const newTab = window.open();
         if (newTab) {
             newTab.document.writeln(`
                 <html><body style="margin:0;background:#000">
@@ -307,7 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </body></html>
             `);
         } else {
-            // 팝업 차단 시 fallback
             const link    = document.createElement('a');
             link.href     = imageData;
             link.download = 'life4cut.png';
