@@ -7,6 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('save-final-image-btn');
     const stickerWorkspace = document.getElementById('sticker-workspace');
     
+        // 카카오톡에서 스크롤이 우선되기 때문에 => 드래그로 하기 위한 함수!
+    document.addEventListener("touchmove", function (e) {
+        
+        if (e.target.closest(".sticker-palette")) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
     let capturedPhotos = [];
     const MAX_PHOTOS = 4;
     let finalCtx = finalPhotoCanvas.getContext('2d');
@@ -94,8 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         drawPhotosOnCanvas().then(() => {
         });
 
-        setupStickerDragDrop();
-        setupMobileStickerDrag();
+        setupUniversalStickerDrag();
         MobileStickerMove();
     };
 
@@ -128,73 +135,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // ─────────────────────────────────────────
     // 5. 스티커 드래그 앤 드롭
     // ─────────────────────────────────────────
-    function setupStickerDragDrop() {
-        let stickerItems = document.querySelectorAll('.sticker-item');
-        stickerItems.forEach(item => {
-            item.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData('text/plain', e.target.src);
-                e.dataTransfer.effectAllowed = 'copy';
-            });
+   function setupUniversalStickerDrag() {
+
+    const palette = document.querySelectorAll(".sticker-item");
+
+    let dragging = null;
+
+    // 스티커 선택
+    palette.forEach(item => {
+        item.addEventListener("pointerdown", (e) => {
+            dragging = {
+                src: item.src
+            };
         });
+    });
 
-        stickerWorkspace.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-        });
+    // 캔버스 위에서 이동
+    stickerWorkspace.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        e.preventDefault();
+    });
 
-        stickerWorkspace.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const imgSrc = e.dataTransfer.getData('text/plain');
+    // 캔버스에 놓기
+    stickerWorkspace.addEventListener("pointerup", (e) => {
 
-            const rect = finalPhotoCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+        if (!dragging) return;
 
-            addStickerToCanvas(imgSrc, x, y);
+        const rect = finalPhotoCanvas.getBoundingClientRect();
 
-        });
-    }
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-    function setupMobileStickerDrag() {
+        if (
+            x >= 0 &&
+            x <= rect.width &&
+            y >= 0 &&
+            y <= rect.height
+        ) {
+            addStickerToCanvas(dragging.src, x, y);
+        }
 
-    const stickerItems = document.querySelectorAll('.sticker-item');
-
-    stickerItems.forEach(item => {
-
-        item.addEventListener("touchstart", (e) => {
-            touchDraggingSticker = item.src;
-            e.isTrusted();
-        });
-
-        item.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-        });
-
-        item.addEventListener("touchend", (e) => {
-
-            if (!touchDraggingSticker) return;
-
-            const touch = e.changedTouches[0];
-            const rect = finalPhotoCanvas.getBoundingClientRect();
-
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-
-            // 캔버스 영역 안에 드롭했을 때만
-            if (
-                x >= 0 &&
-                x <= rect.width &&
-                y >= 0 &&
-                y <= rect.height
-            ) {
-                addStickerToCanvas(touchDraggingSticker, x, y);
-            }
-
-            // touchDraggingSticker = null;
-            touchDraggingSticker = addStickerToCanvas();
-
-        });
-
+        dragging = null;
     });
 
 }
@@ -216,19 +197,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //  ─────────────────────────────────────────
     // 5-1. 모바일 스티커 이동 함수 추가
-    function MobileStickerMove(){
-        stickerWorkspace.addEventListener("touchstart", (e) => {
-            const rect = finalPhotoCanvas.getBoundingClientRect();
-            const touch = e.touches[0];
+    function MobileStickerMove() {
 
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-        })
-    }
-
-    stickerWorkspace.addEventListener("touchmove", (e) => {
-        if(!activeSticker) return;
-        e.preventDefault();
+    // 스티커 선택
+    stickerWorkspace.addEventListener("touchstart", (e) => {
 
         const rect = finalPhotoCanvas.getBoundingClientRect();
         const touch = e.touches[0];
@@ -236,16 +208,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const x = touch.clientX - rect.left;
         const y = touch.clientY - rect.top;
 
-        activeSticker.x = x - offsetX;
-        activeSticker.y = y - offsetY;
-
-        redrawFinalCanvas();
-    });
-
-    stickerWorkspace.addEventListener("touchend", () => {
         activeSticker = null;
-    });
 
+        // 위에 있는 스티커부터 검사
+        for (let i = stickers.length - 1; i >= 0; i--) {
+
+            const s = stickers[i];
+
+            if (
+                x >= s.x &&
+                x <= s.x + s.width &&
+                y >= s.y &&
+                y <= s.y + s.height
+            ) {
+                activeSticker = s;
+                offsetX = x - s.x;
+                offsetY = y - s.y;
+                break;
+            }
+        }
+
+        // 이동
+        stickerWorkspace.addEventListener("touchmove", (e) => {
+
+            if (!activeSticker) return;
+
+            e.preventDefault();
+
+            const rect = finalPhotoCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+
+            activeSticker.x = x - offsetX;
+            activeSticker.y = y - offsetY;
+
+            redrawFinalCanvas();
+
+        }, { passive: false });
+
+        // 놓기
+        stickerWorkspace.addEventListener("touchend", () => {
+            activeSticker = null;
+            
+        });
+
+        
+    });
+}
     // [FIX] 배경 사진 로드 완료 후 스티커 그리기
     function redrawFinalCanvas() {
         drawPhotosOnCanvas().then(() => {
@@ -253,47 +264,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalCtx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
             });
         });
+        
     }
 
     // ─────────────────────────────────────────
     // 6. 최종 이미지 저장
     // [FIX] 저장 전 최종 상태 한 번 더 렌더링 후 다운로드
     // ─────────────────────────────────────────
-    saveBtn.addEventListener('click', async () => {
+    saveBtn.addEventListener("click", async () => {
 
-        // console.log("저장버튼클릭됨")
+    await drawPhotosOnCanvas();
 
-        await drawPhotosOnCanvas();
+    stickers.forEach(sticker => {
+        finalCtx.drawImage(
+            sticker.img,
+            sticker.x,
+            sticker.y,
+            sticker.width,
+            sticker.height
+        );
+    });
 
-        stickers.forEach(sticker => {
-            finalCtx.drawImage(
-                sticker.img,
-                sticker.x,
-                sticker.y,
-                sticker.width,
-                sticker.height
-            );
-        })
+    const imageData = finalPhotoCanvas.toDataURL("image/png");
 
-        // drawPhotosOnCanvas().then(() => {
-        //     stickers.forEach(sticker => {
-        //         finalCtx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
-        //     });
+    // 1. 카카오톡 / iOS 대응 → 새창 열기
+    const newTab = window.open();
 
-            const image = finalPhotoCanvas
-                .toDataURL('image/jpeg')
-                .replace('image/jpeg', 'image/octet-stream');
+    if (newTab) {
+        newTab.document.writeln(`
+            <html>
+            <body style="margin:0">
+                <img src="${imageData}" style="width:100%">
+                <p style="text-align:center;">길게 눌러서 저장하세요</p>
+            </body>
+            </html>
+        `);
+    } else {
+        // 2. fallback (Android 일부)
+        const link = document.createElement("a");
+        link.href = imageData;
+        link.download = "life4cut.png";
+        link.click();
+    }
 
-          setTimeout(() => {      
-            const link = document.createElement('a');
-            link.download = 'life-4cut-photo.jpeg';
-            link.href = image;
-            link.click();
-            }, 100);
-        });
-
+});
     // ─────────────────────────────────────────
     // 시작
     // ─────────────────────────────────────────
     startCamera();
+    
 });
